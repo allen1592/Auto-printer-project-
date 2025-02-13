@@ -1,6 +1,8 @@
-import os # module hỗ trợ xác định hệ điều hành 
-import requests # Modile yêu cầu get file.exe từ URL
+import os 
+import requests # module get url 
 import subprocess #module auto install file
+import zipfile #extract File 
+import shutil
 
     
 def download_file(url, save_folder, printer_driver):
@@ -21,36 +23,60 @@ def download_file(url, save_folder, printer_driver):
         print(f"File downloaded successfully and saved to {save_path}")
     else:
         print(f"Failed to download file. Status code: {response.status_code}")
+    return save_path
 
-def install_driver(printer_driver):
-# Check if the file exists before trying to run it
-    if os.path.exists(printer_driver):
+def extract_zip(zip_path, extract_to):
+    try:
+        """Extract a ZIP file to a specified directory."""
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to)
+        print(f"Extracted files to {extract_to}")
+    except zipfile.BadZipFile:
+            print(f"Error: The file {zip_path} is not a valid ZIP file.")
+    except Exception as e:
+            print(f"An error occurred while extracting the ZIP file: {e}")
+
+def install_driver(installer_path):
+    """Run the installer executable."""
+    if os.path.exists(installer_path):
         try:
-            subprocess.run([printer_driver], check=True)
+            subprocess.run([installer_path], check=True)
             print("Installation completed successfully.")
         except subprocess.CalledProcessError as e:
             print(f"An error occurred during installation: {e}")
+        except OSError as e:
+            print(f"OS error occurred: {e}")
     else:
-        print(f"File not found: {printer_driver}")
+        print(f"Installer not found: {installer_path}")
 
 
 # Định nghĩa các tên chính sẽ được sử dụng trong function 
 if __name__ == "__main__":
-    # Replace with the actual URL of the .exe file you want to download
-    url = "https://drive.google.com/drive/u/0/folders/1mEtMRIXoVTr7gnqRVSrM1NFn7yPcjUGG"
-    # Replace with the path to the folder where you want to save the file
-    save_folder = r"C:\Users\danhp\Downloads"  # add r trước đường dẫn để tránh bị hiểu nhầm là khoảng trắng trong string
-    # Specify the desired filename
-    printer_driver = "toshiba_printer.exe"
+    # URL of the printer driver ZIP file
+    url = "https://business.toshiba.com/downloads/KB/f1Ulds/21280/ebn-Uni-7.222.5412.231.zip"
     
-    # Step 1: Call the download_file function
-    download_file(url, save_folder, printer_driver)
+    # Folder to save the downloaded file
+    save_folder = r"C:\Users\Public\Downloads"  # Change to your desired path
+    zip_filename = "printer_driver.zip"
     
-    #Step 2: combines function download_file and install driver 
-    full_driver_path = os.path.join(save_folder, printer_driver)
+    # Step 1: Download the ZIP file
+    zip_path = download_file(url, save_folder, zip_filename)
     
-    # Step 3: Install the driver
-    install_driver(printer_driver)
+    if zip_path:  # Check if the download was successful
+        # Step 2: Extract the ZIP file
+        extract_to = save_folder  # Specify the extraction directory
+        extract_zip(zip_path, extract_to)
+
+        # Step 3: Find the installer executable (adjust the name as necessary)
+        installer_name = "essetup.exe"  # Change this to the actual installer name if different
+        installer_path = os.path.join(r"C:\Users\Public\Downloads\UNI", installer_name)
+
+        # Step 4: Install the driver
+        install_driver(installer_path)
+
+     
+
+  
     
 
     
